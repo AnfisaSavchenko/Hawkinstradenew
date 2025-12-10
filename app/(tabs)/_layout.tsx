@@ -14,7 +14,7 @@ function TabIcon({ icon, label, color }: TabIconProps) {
   return (
     <View style={styles.tabIconContainer}>
       <Text style={[styles.tabIcon, { color }]}>{icon}</Text>
-      <Text style={[styles.tabLabel, { color }]}>{label}</Text>
+      <Text style={[styles.tabLabel, { color }]} numberOfLines={1}>{label}</Text>
     </View>
   );
 }
@@ -66,14 +66,16 @@ const styles = StyleSheet.create({
   tabIconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 2,
+    minWidth: 60,
   },
   tabIcon: {
-    fontSize: 20,
+    fontSize: 18,
   },
   tabLabel: {
     fontFamily: 'monospace',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '600',
+    textAlign: 'center',
   },
 });

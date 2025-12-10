@@ -20,8 +20,7 @@ import { Listing, OFFICIAL_FIGURES, ListingType } from '@/types/hawkins';
 import {
   getListings,
   getUniqueCharacters,
-  getUniqueLocations,
-  getUniqueSellers,
+  getUniqueCountries,
   addListing,
 } from '@/services/dataService';
 
@@ -45,22 +44,19 @@ export default function MarketScreen() {
 
   // Filter options
   const [characters, setCharacters] = useState<string[]>([]);
-  const [locations, setLocations] = useState<string[]>([]);
-  const [sellers, setSellers] = useState<string[]>([]);
+  const [countries, setCountries] = useState<string[]>([]);
 
   const loadData = useCallback(async () => {
     try {
-      const [listingsData, chars, locs, sels] = await Promise.all([
+      const [listingsData, chars, ctries] = await Promise.all([
         getListings(),
         getUniqueCharacters(),
-        getUniqueLocations(),
-        getUniqueSellers(),
+        getUniqueCountries(),
       ]);
 
       setListings(listingsData);
       setCharacters(chars);
-      setLocations(locs);
-      setSellers(sels);
+      setCountries(ctries);
     } catch (error) {
       console.error('Failed to load listings:', error);
     } finally {
@@ -87,10 +83,9 @@ export default function MarketScreen() {
         case 'character':
           const figure = OFFICIAL_FIGURES.find((f) => f.id === listing.figureId);
           return figure?.character === activeFilter.value;
-        case 'location':
-          return listing.location === activeFilter.value;
-        case 'seller':
-          return listing.sellerHandle === activeFilter.value;
+        case 'country':
+          // Match if location ends with the selected country
+          return listing.location.trim().endsWith(activeFilter.value);
         default:
           return true;
       }
@@ -112,12 +107,8 @@ export default function MarketScreen() {
   );
 
   const handleSellerPress = useCallback(
-    (sellerHandle: string) => {
-      setActiveFilter({
-        type: 'seller',
-        value: sellerHandle,
-        label: sellerHandle,
-      });
+    (_sellerHandle: string) => {
+      // Seller filter removed - could navigate to seller profile in future
     },
     []
   );
@@ -157,8 +148,7 @@ export default function MarketScreen() {
         activeFilter={activeFilter}
         onFilterChange={handleFilterChange}
         characters={characters}
-        locations={locations}
-        sellers={sellers}
+        countries={countries}
       />
 
       <FlatList

@@ -471,3 +471,23 @@ export async function getUniqueListingTypes(): Promise<ListingType[]> {
     return [];
   }
 }
+
+// Get unique countries from location strings (format: "City, Country")
+export async function getUniqueCountries(): Promise<string[]> {
+  try {
+    const listings = await getListings();
+    const countries = listings
+      .map((l) => {
+        const parts = l.location.split(',');
+        if (parts.length >= 2) {
+          return parts[parts.length - 1].trim();
+        }
+        return null;
+      })
+      .filter((c): c is string => c !== null && c.length > 0);
+    return [...new Set(countries)].sort();
+  } catch (error) {
+    console.error('Failed to get unique countries:', error);
+    return [];
+  }
+}
