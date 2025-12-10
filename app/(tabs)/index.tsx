@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import HawkinsHeader from '@/components/HawkinsHeader';
 import ListingCard from '@/components/ListingCard';
@@ -65,9 +65,13 @@ export default function MarketScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  // Refresh data every time the screen comes into focus
+  // This ensures changes made in Item Details (e.g., marking as Sold) are immediately visible
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   // Apply filters
   useEffect(() => {
