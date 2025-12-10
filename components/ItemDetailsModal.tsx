@@ -47,6 +47,17 @@ export default function ItemDetailsModal({
   const isIso = listing.listingType === 'iso';
   const isSwap = listing.listingType === 'swap';
 
+  // Use user-uploaded photo if available, otherwise fall back to stock figure image
+  const heroImage = listing.userImageUri ? { uri: listing.userImageUri } : figureImage;
+
+  // Filter out the current listing from "More from Seller"
+  const filteredMoreBySeller = moreBySeller.filter((item) => item.id !== listing.id);
+
+  // Helper to get the display image for a listing (user photo or fallback to figure)
+  const getListingImage = (item: Listing) => {
+    return item.userImageUri ? { uri: item.userImageUri } : getFigureImage(item.figureId);
+  };
+
   const getTypeColor = () => {
     switch (listing.listingType) {
       case 'sell': return theme.colors.primary;
@@ -173,7 +184,7 @@ export default function ItemDetailsModal({
           isIso && { borderWidth: 3, borderColor: theme.colors.iso, borderStyle: 'dashed' }
         ]}>
           <Image
-            source={figureImage}
+            source={heroImage}
             style={styles.image}
             resizeMode="cover"
           />
@@ -320,7 +331,7 @@ export default function ItemDetailsModal({
           </TouchableOpacity>
 
           {/* More from Seller */}
-          {moreBySeller.length > 0 && (
+          {filteredMoreBySeller.length > 0 && (
             <View style={styles.moreBySeller}>
               <Text style={[styles.moreBySellerTitle, { color: theme.colors.text }]}>
                 More from {listing.sellerHandle}
@@ -330,14 +341,14 @@ export default function ItemDetailsModal({
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.moreBySellerScroll}
               >
-                {moreBySeller.map((item) => (
+                {filteredMoreBySeller.map((item) => (
                   <TouchableOpacity
                     key={item.id}
                     style={[styles.relatedCard, { backgroundColor: theme.colors.cardBg, borderColor: theme.colors.border }]}
                     onPress={() => onRelatedItemPress(item)}
                   >
                     <Image
-                      source={getFigureImage(item.figureId)}
+                      source={getListingImage(item)}
                       style={styles.relatedImage}
                       resizeMode="cover"
                     />

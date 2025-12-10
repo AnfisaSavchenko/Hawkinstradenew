@@ -16,6 +16,9 @@ export default function ListingCard({ listing, onPress, onSellerPress }: Listing
   const targetFigure = listing.swapTargetId ? getFigureById(listing.swapTargetId) : null;
   const figureImage = getFigureImage(listing.figureId);
 
+  // Use user-uploaded photo if available, otherwise fall back to stock figure image
+  const displayImage = listing.userImageUri ? { uri: listing.userImageUri } : figureImage;
+
   const getTypeColor = () => {
     switch (listing.listingType) {
       case 'sell': return theme.colors.primary;
@@ -54,7 +57,7 @@ export default function ListingCard({ listing, onPress, onSellerPress }: Listing
       {/* Hero Image */}
       <View style={styles.imageContainer}>
         <Image
-          source={figureImage}
+          source={displayImage}
           style={styles.image}
           resizeMode="cover"
         />

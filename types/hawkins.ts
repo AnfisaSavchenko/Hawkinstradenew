@@ -24,6 +24,7 @@ export interface Listing {
   location: string;
   description: string;
   imageUri: string;
+  userImageUri?: string; // User-uploaded photo evidence
   sellerId: string;
   sellerHandle: string;
   contactMethods: ContactMethod[];

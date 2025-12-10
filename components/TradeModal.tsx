@@ -11,13 +11,14 @@ import {
   Platform,
   Switch,
   KeyboardAvoidingView,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
   OFFICIAL_FIGURES,
   CONDITIONS,
-  LOCATIONS,
   ContactMethod,
   Listing,
   ListingType,
@@ -40,7 +41,13 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
   const [swapTargetId, setSwapTargetId] = useState(OFFICIAL_FIGURES[1].id);
   const [price, setPrice] = useState('');
   const [condition, setCondition] = useState<typeof CONDITIONS[number]>('Mint in Box');
-  const [location, setLocation] = useState(LOCATIONS[0]);
+
+  // Location fields (City + Country)
+  const [city, setCity] = useState('');
+  const [country, setCountry] = useState('');
+
+  // Photo upload
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
 
   // Contact methods
   const [useInstagram, setUseInstagram] = useState(true);
@@ -53,7 +60,6 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
   const [showFigureDropdown, setShowFigureDropdown] = useState(false);
   const [showTargetDropdown, setShowTargetDropdown] = useState(false);
   const [showConditionDropdown, setShowConditionDropdown] = useState(false);
-  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedFigureData = getFigureById(selectedFigure);
@@ -65,20 +71,53 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
     setSwapTargetId(OFFICIAL_FIGURES[1].id);
     setPrice('');
     setCondition('Mint in Box');
-    setLocation(LOCATIONS[0]);
+    setCity('');
+    setCountry('');
+    setPhotoUri(null);
     setInstagramUsername('');
     setTiktokUsername('');
     setEmailAddress('');
     setShowFigureDropdown(false);
     setShowTargetDropdown(false);
     setShowConditionDropdown(false);
-    setShowLocationDropdown(false);
+  };
+
+  // Photo picker function
+  const handlePickPhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Please allow access to your photo library to upload evidence.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
   };
 
   const validateForm = (): boolean => {
+    // Photo is mandatory
+    if (!photoUri) {
+      Alert.alert('Evidence Required', 'Please upload a photo of your figure to verify your listing.');
+      return false;
+    }
+
     // Price validation for sell and iso types
     if ((listingType === 'sell' || listingType === 'iso') && (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0)) {
       Alert.alert('Invalid Price', 'Please enter a valid price.');
+      return false;
+    }
+
+    // Location validation
+    if (!city.trim() || !country.trim()) {
+      Alert.alert('Location Required', 'Please enter your city and country.');
       return false;
     }
 
@@ -132,6 +171,9 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
       contactMethods.push({ type: 'email', username: emailAddress });
     }
 
+    // Combine city and country for location
+    const combinedLocation = `${city.trim()}, ${country.trim()}`;
+
     setIsSubmitting(true);
     try {
       await onSubmit({
@@ -139,9 +181,10 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
         title: getTitle(),
         price: listingType === 'swap' ? 0 : parseFloat(price),
         condition,
-        location,
+        location: combinedLocation,
         description: '',
         imageUri: '',
+        userImageUri: photoUri || undefined,
         sellerId: 'current_user',
         sellerHandle: '@CurrentUser',
         contactMethods,
@@ -189,7 +232,6 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
 
   const figureOptions = OFFICIAL_FIGURES.map((f) => ({ label: `${f.id} - ${f.character}`, value: f.id }));
   const conditionOptions = CONDITIONS.map((c) => ({ label: c, value: c }));
-  const locationOptions = LOCATIONS.map((l) => ({ label: l, value: l }));
 
   const getTypeColor = (type: ListingType): string => {
     switch (type) {
@@ -268,7 +310,6 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
                 setShowFigureDropdown(!showFigureDropdown);
                 setShowTargetDropdown(false);
                 setShowConditionDropdown(false);
-                setShowLocationDropdown(false);
               }}
             >
               <Text style={[styles.inputText, { color: theme.colors.text }]}>
@@ -298,7 +339,6 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
                     setShowTargetDropdown(!showTargetDropdown);
                     setShowFigureDropdown(false);
                     setShowConditionDropdown(false);
-                    setShowLocationDropdown(false);
                   }}
                 >
                   <Text style={[styles.inputText, { color: theme.colors.text }]}>
@@ -344,7 +384,6 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
                 setShowConditionDropdown(!showConditionDropdown);
                 setShowFigureDropdown(false);
                 setShowTargetDropdown(false);
-                setShowLocationDropdown(false);
               }}
             >
               <Text style={[styles.inputText, { color: theme.colors.text }]}>{condition}</Text>
@@ -358,26 +397,63 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
             )}
           </View>
 
-          {/* Location */}
-          <View style={[styles.field, { zIndex: 70 }]}>
+          {/* Location - City & Country */}
+          <View style={styles.field}>
             <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Location</Text>
-            <TouchableOpacity
-              style={[styles.input, styles.selectInput, { borderBottomColor: getTypeColor(listingType) }]}
-              onPress={() => {
-                setShowLocationDropdown(!showLocationDropdown);
-                setShowFigureDropdown(false);
-                setShowTargetDropdown(false);
-                setShowConditionDropdown(false);
-              }}
-            >
-              <Text style={[styles.inputText, { color: theme.colors.text }]}>{location}</Text>
-              <Text style={[styles.chevron, { color: getTypeColor(listingType) }]}>▼</Text>
-            </TouchableOpacity>
-            {showLocationDropdown && renderDropdown(
-              locationOptions,
-              location,
-              setLocation,
-              () => setShowLocationDropdown(false)
+            <View style={styles.locationRow}>
+              <View style={styles.locationField}>
+                <TextInput
+                  style={[styles.input, { color: theme.colors.text, borderBottomColor: getTypeColor(listingType) }]}
+                  value={city}
+                  onChangeText={setCity}
+                  placeholder="City"
+                  placeholderTextColor={theme.colors.textSecondary + '80'}
+                />
+              </View>
+              <View style={styles.locationField}>
+                <TextInput
+                  style={[styles.input, { color: theme.colors.text, borderBottomColor: getTypeColor(listingType) }]}
+                  value={country}
+                  onChangeText={setCountry}
+                  placeholder="Country"
+                  placeholderTextColor={theme.colors.textSecondary + '80'}
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Photo Upload - Polaroid Style */}
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: theme.colors.textSecondary }]}>📸 Evidence Photo</Text>
+            {photoUri ? (
+              <TouchableOpacity
+                style={[styles.polaroidContainer, { backgroundColor: theme.colors.surface }]}
+                onPress={handlePickPhoto}
+                activeOpacity={0.8}
+              >
+                <View style={styles.polaroidFrame}>
+                  <Image source={{ uri: photoUri }} style={styles.polaroidImage} resizeMode="cover" />
+                </View>
+                <View style={styles.polaroidCaption}>
+                  <Text style={[styles.polaroidText, { color: theme.colors.textSecondary }]}>
+                    TAP TO CHANGE
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.uploadButton, { borderColor: getTypeColor(listingType), backgroundColor: theme.colors.surface }]}
+                onPress={handlePickPhoto}
+                activeOpacity={0.7}
+              >
+                <View style={styles.uploadContent}>
+                  <Text style={styles.uploadIcon}>📷</Text>
+                  <Text style={[styles.uploadTitle, { color: theme.colors.text }]}>Upload Evidence</Text>
+                  <Text style={[styles.uploadSubtitle, { color: theme.colors.textSecondary }]}>
+                    Take Photo / Choose from Gallery
+                  </Text>
+                </View>
+              </TouchableOpacity>
             )}
           </View>
 
@@ -597,6 +673,68 @@ const styles = StyleSheet.create({
   dropdownItemText: {
     fontFamily: 'monospace',
     fontSize: 14,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  locationField: {
+    flex: 1,
+  },
+  polaroidContainer: {
+    alignSelf: 'center',
+    padding: 12,
+    borderRadius: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    transform: [{ rotate: '-2deg' }],
+  },
+  polaroidFrame: {
+    width: 200,
+    height: 200,
+    backgroundColor: '#1a1a1a',
+    marginBottom: 8,
+  },
+  polaroidImage: {
+    width: '100%',
+    height: '100%',
+  },
+  polaroidCaption: {
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  polaroidText: {
+    fontFamily: 'monospace',
+    fontSize: 10,
+    letterSpacing: 2,
+  },
+  uploadButton: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+  },
+  uploadContent: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  uploadIcon: {
+    fontSize: 48,
+  },
+  uploadTitle: {
+    fontFamily: 'monospace',
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  uploadSubtitle: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    letterSpacing: 0.5,
   },
   contactRow: {
     flexDirection: 'row',
