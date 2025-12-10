@@ -11,6 +11,7 @@ interface ListingCardProps {
 
 export default function ListingCard({ listing, onPress, onSellerPress }: ListingCardProps) {
   const { theme } = useTheme();
+  const isUpsideDown = theme.mode === 'upsideDown';
 
   const figure = getFigureById(listing.figureId);
   const targetFigure = listing.swapTargetId ? getFigureById(listing.swapTargetId) : null;
@@ -40,15 +41,28 @@ export default function ListingCard({ listing, onPress, onSellerPress }: Listing
   const isIso = listing.listingType === 'iso';
   const isSwap = listing.listingType === 'swap';
 
+  // In Upside Down mode, remove borders; in Real World mode, keep neon borders
+  const getBorderStyle = () => {
+    if (isUpsideDown) {
+      return {
+        borderColor: 'transparent',
+        borderWidth: 0,
+      };
+    }
+    return {
+      borderColor: isIso ? theme.colors.iso : theme.colors.border,
+      borderStyle: isIso ? 'dashed' as const : 'solid' as const,
+      borderWidth: isIso ? 2 : 1,
+    };
+  };
+
   return (
     <TouchableOpacity
       style={[
         styles.container,
         {
           backgroundColor: theme.colors.cardBg,
-          borderColor: isIso ? theme.colors.iso : theme.colors.border,
-          borderStyle: isIso ? 'dashed' : 'solid',
-          borderWidth: isIso ? 2 : 1,
+          ...getBorderStyle(),
         },
       ]}
       onPress={onPress}

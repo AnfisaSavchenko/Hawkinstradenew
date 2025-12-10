@@ -16,6 +16,7 @@ interface CatalogItemProps {
 
 function CatalogItem({ figure, onPress }: CatalogItemProps) {
   const { theme } = useTheme();
+  const isUpsideDown = theme.mode === 'upsideDown';
 
   return (
     <TouchableOpacity
@@ -23,7 +24,8 @@ function CatalogItem({ figure, onPress }: CatalogItemProps) {
         styles.item,
         {
           backgroundColor: theme.colors.cardBg,
-          borderColor: theme.colors.primary,
+          borderColor: isUpsideDown ? 'transparent' : theme.colors.primary,
+          borderWidth: isUpsideDown ? 0 : 2,
         },
       ]}
       onPress={onPress}
@@ -39,7 +41,15 @@ function CatalogItem({ figure, onPress }: CatalogItemProps) {
       </View>
 
       {/* Figure Info - File Label Style */}
-      <View style={[styles.info, { borderTopColor: theme.colors.primary }]}>
+      <View
+        style={[
+          styles.info,
+          {
+            borderTopColor: isUpsideDown ? 'transparent' : theme.colors.primary,
+            borderTopWidth: isUpsideDown ? 0 : 1,
+          },
+        ]}
+      >
         <Text
           style={[styles.figureId, { color: theme.colors.primary }]}
           numberOfLines={1}
