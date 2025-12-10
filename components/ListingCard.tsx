@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Listing } from '@/types/hawkins';
+import { Listing, getFigureById, getFigureImage } from '@/types/hawkins';
 
 interface ListingCardProps {
   listing: Listing;
@@ -12,13 +12,40 @@ interface ListingCardProps {
 export default function ListingCard({ listing, onPress, onSellerPress }: ListingCardProps) {
   const { theme } = useTheme();
 
+  const figure = getFigureById(listing.figureId);
+  const targetFigure = listing.swapTargetId ? getFigureById(listing.swapTargetId) : null;
+  const figureImage = getFigureImage(listing.figureId);
+
+  const getTypeColor = () => {
+    switch (listing.listingType) {
+      case 'sell': return theme.colors.primary;
+      case 'swap': return theme.colors.swap;
+      case 'iso': return theme.colors.iso;
+      default: return theme.colors.primary;
+    }
+  };
+
+  const getTypeBadge = () => {
+    switch (listing.listingType) {
+      case 'sell': return '💰 FOR SALE';
+      case 'swap': return '⇄ SWAP';
+      case 'iso': return '🔍 ISO';
+      default: return '';
+    }
+  };
+
+  const isIso = listing.listingType === 'iso';
+  const isSwap = listing.listingType === 'swap';
+
   return (
     <TouchableOpacity
       style={[
         styles.container,
         {
           backgroundColor: theme.colors.cardBg,
-          borderColor: theme.colors.border,
+          borderColor: isIso ? theme.colors.iso : theme.colors.border,
+          borderStyle: isIso ? 'dashed' : 'solid',
+          borderWidth: isIso ? 2 : 1,
         },
       ]}
       onPress={onPress}
@@ -27,10 +54,16 @@ export default function ListingCard({ listing, onPress, onSellerPress }: Listing
       {/* Hero Image */}
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: listing.imageUri }}
+          source={figureImage}
           style={styles.image}
           resizeMode="cover"
         />
+
+        {/* Type Badge */}
+        <View style={[styles.typeBadge, { backgroundColor: getTypeColor() }]}>
+          <Text style={styles.typeBadgeText}>{getTypeBadge()}</Text>
+        </View>
+
         {/* SOLD Stamp Overlay */}
         {listing.isSold && (
           <View style={styles.soldOverlay}>
@@ -39,6 +72,7 @@ export default function ListingCard({ listing, onPress, onSellerPress }: Listing
             </View>
           </View>
         )}
+
         {/* Favorite Button */}
         <TouchableOpacity style={styles.favoriteButton} activeOpacity={0.7}>
           <Text style={styles.favoriteIcon}>♡</Text>
@@ -47,17 +81,31 @@ export default function ListingCard({ listing, onPress, onSellerPress }: Listing
 
       {/* Content */}
       <View style={styles.content}>
+        {/* Title */}
         <Text
           style={[styles.title, { color: theme.colors.text }]}
           numberOfLines={1}
         >
-          {listing.title}
+          {isIso ? `ISO: ${figure?.character || listing.figureId}` : listing.title}
         </Text>
 
+        {/* Price/Swap Info Row */}
         <View style={styles.priceRow}>
-          <Text style={[styles.price, { color: theme.colors.primary }]}>
-            ${listing.price.toFixed(2)}
-          </Text>
+          {isSwap ? (
+            // Swap display
+            <View style={styles.swapInfo}>
+              <Text style={[styles.swapIcon, { color: theme.colors.swap }]}>⇄</Text>
+              <Text style={[styles.swapText, { color: theme.colors.swap }]}>
+                Wants: {targetFigure?.character || 'Any'}
+              </Text>
+            </View>
+          ) : (
+            // Price display (Sell or ISO)
+            <Text style={[styles.price, { color: getTypeColor() }]}>
+              {isIso ? `Max: $${listing.price.toFixed(2)}` : `$${listing.price.toFixed(2)}`}
+            </Text>
+          )}
+
           <View
             style={[
               styles.conditionBadge,
@@ -70,9 +118,25 @@ export default function ListingCard({ listing, onPress, onSellerPress }: Listing
           </View>
         </View>
 
+        {/* Swap target thumbnail */}
+        {isSwap && targetFigure && (
+          <View style={styles.swapTargetRow}>
+            <Image
+              source={getFigureImage(listing.swapTargetId!)}
+              style={styles.swapTargetThumb}
+              resizeMode="cover"
+            />
+            <Text style={[styles.swapTargetText, { color: theme.colors.textSecondary }]}>
+              {targetFigure.id} - {targetFigure.name}
+            </Text>
+          </View>
+        )}
+
+        {/* Seller */}
         <TouchableOpacity onPress={onSellerPress}>
           <Text style={[styles.seller, { color: theme.colors.textSecondary }]}>
-            Seller: <Text style={[styles.sellerHandle, { color: theme.colors.secondary }]}>
+            {isIso ? 'Buyer: ' : 'Seller: '}
+            <Text style={[styles.sellerHandle, { color: theme.colors.secondary }]}>
               {listing.sellerHandle}
             </Text>
           </Text>
@@ -87,7 +151,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8,
     borderRadius: 12,
-    borderWidth: 1,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
@@ -109,6 +172,21 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     backgroundColor: '#1a1a1a',
+  },
+  typeBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  typeBadgeText: {
+    color: '#fff',
+    fontFamily: 'monospace',
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 1,
   },
   soldOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -165,6 +243,41 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  swapInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  swapIcon: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  swapText: {
+    fontFamily: 'monospace',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  swapTargetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+  },
+  swapTargetThumb: {
+    width: 40,
+    height: 40,
+    borderRadius: 6,
+    backgroundColor: '#1a1a1a',
+  },
+  swapTargetText: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    flex: 1,
   },
   conditionBadge: {
     paddingHorizontal: 10,

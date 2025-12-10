@@ -7,11 +7,10 @@ import { useTheme } from '@/contexts/ThemeContext';
 interface TabIconProps {
   icon: string;
   label: string;
-  focused: boolean;
   color: string;
 }
 
-function TabIcon({ icon, label, focused, color }: TabIconProps) {
+function TabIcon({ icon, label, color }: TabIconProps) {
   return (
     <View style={styles.tabIconContainer}>
       <Text style={[styles.tabIcon, { color }]}>{icon}</Text>
@@ -45,8 +44,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Market',
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon icon="🏠" label="Market" focused={focused} color={color} />
+          tabBarIcon: ({ color }) => (
+            <TabIcon icon="🏠" label="Market" color={color} />
           ),
         }}
       />
@@ -54,17 +53,8 @@ export default function TabLayout() {
         name="catalog"
         options={{
           title: 'Catalog',
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon icon="📋" label="Catalog" focused={focused} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="sell"
-        options={{
-          title: 'Sell',
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon icon="⊕" label="Sell" focused={focused} color={color} />
+          tabBarIcon: ({ color }) => (
+            <TabIcon icon="📋" label="Catalog" color={color} />
           ),
         }}
       />

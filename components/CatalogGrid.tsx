@@ -32,16 +32,17 @@ function CatalogItem({ figure, isSelling, isOwned, onPress }: CatalogItemProps) 
         {
           backgroundColor: theme.colors.cardBg,
           borderColor: isSelling ? theme.colors.primary : theme.colors.border,
+          borderWidth: isSelling ? 2 : 1,
           opacity: getDimmedOpacity(),
         },
       ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      {/* Placeholder silhouette image */}
+      {/* Figure Image */}
       <View style={[styles.imageContainer, { backgroundColor: theme.colors.surface }]}>
         <Image
-          source={{ uri: `https://picsum.photos/seed/${figure.id}/120/140` }}
+          source={figure.image}
           style={styles.image}
           resizeMode="cover"
         />
@@ -109,7 +110,6 @@ const styles = StyleSheet.create({
   item: {
     width: ITEM_WIDTH,
     borderRadius: 8,
-    borderWidth: 1,
     overflow: 'hidden',
     marginBottom: COLUMN_GAP,
   },

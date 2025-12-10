@@ -1,10 +1,14 @@
 // Hawkins Trade - Core Types
+import { ImageSourcePropType } from 'react-native';
 
 export interface Figure {
-  id: string; // VC259-VC282
+  id: string;
   name: string;
   character: string;
+  image: ImageSourcePropType;
 }
+
+export type ListingType = 'sell' | 'swap' | 'iso';
 
 export interface ContactMethod {
   type: 'instagram' | 'tiktok' | 'email';
@@ -25,6 +29,8 @@ export interface Listing {
   contactMethods: ContactMethod[];
   isSold: boolean;
   createdAt: number;
+  listingType: ListingType;
+  swapTargetId?: string; // Figure ID user wants in exchange (for swap listings)
 }
 
 export interface UserData {
@@ -50,6 +56,8 @@ export interface Theme {
     sold: string;
     success: string;
     cardBg: string;
+    swap: string;
+    iso: string;
   };
 }
 
@@ -67,6 +75,8 @@ export const REAL_WORLD_THEME: Theme = {
     sold: '#ff1515',
     success: '#073e1e',
     cardBg: '#1a0505',
+    swap: '#f59e0b',
+    iso: '#8b5cf6',
   },
 };
 
@@ -84,36 +94,49 @@ export const UPSIDE_DOWN_THEME: Theme = {
     sold: '#580b58',
     success: '#2e4a1e',
     cardBg: '#0a1020',
+    swap: '#d97706',
+    iso: '#7c3aed',
   },
 };
 
-// The 24 Official Figures (VC259-VC282)
+// The Official Figures with local images
 export const OFFICIAL_FIGURES: Figure[] = [
-  { id: 'VC259', name: 'Will Byers - The Vanishing', character: 'Will' },
-  { id: 'VC260', name: 'Mike Wheeler - The Searcher', character: 'Mike' },
-  { id: 'VC261', name: 'Lucas Sinclair - The Warrior', character: 'Lucas' },
-  { id: 'VC262', name: 'Dustin Henderson - The Brain', character: 'Dustin' },
-  { id: 'VC263', name: 'Eleven - The Psychic', character: 'Eleven' },
-  { id: 'VC264', name: 'Joyce Byers - The Mother', character: 'Joyce' },
-  { id: 'VC265', name: 'Jim Hopper - The Chief', character: 'Hopper' },
-  { id: 'VC266', name: 'Nancy Wheeler - The Hunter', character: 'Nancy' },
-  { id: 'VC267', name: 'Jonathan Byers - The Outsider', character: 'Jonathan' },
-  { id: 'VC268', name: 'Steve Harrington - The Protector', character: 'Steve' },
-  { id: 'VC269', name: 'Max Mayfield - The Runaway', character: 'Max' },
-  { id: 'VC270', name: 'Robin Buckley - The Translator', character: 'Robin' },
-  { id: 'VC271', name: 'Demogorgon - The Monster', character: 'Demogorgon' },
-  { id: 'VC272', name: 'Demobat - The Swarm', character: 'Demobat' },
-  { id: 'VC273', name: 'Mind Flayer - The Shadow', character: 'Mind Flayer' },
-  { id: 'VC274', name: 'Vecna - The Curse', character: 'Vecna' },
-  { id: 'VC275', name: 'Eddie Munson - The Hero', character: 'Eddie' },
-  { id: 'VC276', name: 'Billy Hargrove - The Lifeguard', character: 'Billy' },
-  { id: 'VC277', name: 'Dr. Brenner - The Father', character: 'Brenner' },
-  { id: 'VC278', name: 'Bob Newby - The Brain', character: 'Bob' },
-  { id: 'VC279', name: 'Murray Bauman - The Investigator', character: 'Murray' },
-  { id: 'VC280', name: 'Erica Sinclair - The Spy', character: 'Erica' },
-  { id: 'VC281', name: 'Argyle - The Stoner', character: 'Argyle' },
-  { id: 'VC282', name: 'Suzie Bingham - The Voice', character: 'Suzie' },
+  { id: 'VC259', name: 'Will Byers - The Vanishing', character: 'Will', image: require('@/assets/images/Will_VC259.jpg') },
+  { id: 'VC260', name: 'Will Byers - Upside Down', character: 'Will', image: require('@/assets/images/Will_VC260_Upside_down.jpg') },
+  { id: 'VC261', name: 'Dustin Henderson - The Brain', character: 'Dustin', image: require('@/assets/images/Dustin_VC261.jpg') },
+  { id: 'VC262', name: 'Dustin Henderson - Upside Down', character: 'Dustin', image: require('@/assets/images/Dustin_VC262_Upside_down.jpg') },
+  { id: 'VC263', name: 'Jim Hopper - The Chief', character: 'Hopper', image: require('@/assets/images/Hopper_VC263.jpg') },
+  { id: 'VC264', name: 'Jim Hopper - Upside Down', character: 'Hopper', image: require('@/assets/images/Hopper_Upside_down_VC264.jpg') },
+  { id: 'VC265', name: 'Max Mayfield - The Runaway', character: 'Max', image: require('@/assets/images/Max_VC265.jpg') },
+  { id: 'VC266', name: 'Max Mayfield - Upside Down', character: 'Max', image: require('@/assets/images/Max_Upside_down__VC266.jpg') },
+  { id: 'VC267', name: 'Steve Harrington - The Protector', character: 'Steve', image: require('@/assets/images/Steve_VC267.jpg') },
+  { id: 'VC268', name: 'Steve Harrington - Upside Down', character: 'Steve', image: require('@/assets/images/Steve_VC268_Upside_down.jpg') },
+  { id: 'VC269', name: 'Eleven - The Psychic', character: 'Eleven', image: require('@/assets/images/Eleven_VC269.jpg') },
+  { id: 'VC271', name: 'Demogorgon - The Monster', character: 'Demogorgon', image: require('@/assets/images/Demogorgone_VC271.jpg') },
+  { id: 'VC273', name: 'Lucas Sinclair - The Warrior', character: 'Lucas', image: require('@/assets/images/Lucas_VC273.jpg') },
+  { id: 'VC274', name: 'Mike Wheeler - The Searcher', character: 'Mike', image: require('@/assets/images/Mike_VC274.jpg') },
+  { id: 'VC275', name: 'Demogorgon - Paperclip Edition', character: 'Demogorgon', image: require('@/assets/images/Demogorgone_paperclip_VC275.jpg') },
+  { id: 'VC276', name: 'Eleven - Phone Stand Edition', character: 'Eleven', image: require('@/assets/images/Eleven_sopporto_smartphone_VC276.jpg') },
+  { id: 'VC277', name: 'Vecna - Phone Stand Edition', character: 'Vecna', image: require('@/assets/images/Vecna_smartphone_VC277.jpg') },
+  { id: 'VC283', name: 'Nancy Wheeler - Cable Deco', character: 'Nancy', image: require('@/assets/images/Nanacy_cable_deco_VC283.jpg') },
+  { id: 'VC285', name: 'Erica Sinclair - Cable Deco', character: 'Erica', image: require('@/assets/images/Erica_cable_deco_VC285.jpg') },
+  { id: 'VC286', name: 'Steve & Robin - Pen Deco', character: 'Steve & Robin', image: require('@/assets/images/Steven_e_robin_pen_deco_VC286.jpg') },
+  { id: 'VC287', name: 'Demogorgon - Pen Deco', character: 'Demogorgon', image: require('@/assets/images/Demogorgone_pen_deco_VC287.jpg') },
+  { id: 'VC288', name: 'Eddie Munson - Upside Down Cable Deco', character: 'Eddie', image: require('@/assets/images/Eddie_Upside_down__cable_deco_VC288.jpg') },
+  { id: 'VC289', name: 'Robin Buckley - Upside Down', character: 'Robin', image: require('@/assets/images/Robin_Upside_down_VC288.jpg') },
+  { id: 'VC356', name: 'Eleven - Paperclip Edition', character: 'Eleven', image: require('@/assets/images/Eleven_paperclip_VC356.jpg') },
 ];
+
+// Helper to get figure by ID
+export function getFigureById(id: string): Figure | undefined {
+  return OFFICIAL_FIGURES.find((f) => f.id === id);
+}
+
+// Helper to get figure image source
+export function getFigureImage(figureId: string): ImageSourcePropType {
+  const figure = getFigureById(figureId);
+  return figure?.image ?? require('@/assets/images/Will_VC259.jpg');
+}
 
 export const CONDITIONS = [
   'Mint in Box',
@@ -135,4 +158,10 @@ export const LOCATIONS = [
   'Denver, CO',
   'Austin, TX',
   'Miami, FL',
+];
+
+export const LISTING_TYPES: { value: ListingType; label: string; icon: string }[] = [
+  { value: 'sell', label: 'Sell', icon: '💰' },
+  { value: 'swap', label: 'Swap', icon: '⇄' },
+  { value: 'iso', label: 'ISO', icon: '🔍' },
 ];

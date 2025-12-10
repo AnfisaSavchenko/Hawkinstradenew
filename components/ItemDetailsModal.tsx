@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Listing } from '@/types/hawkins';
+import { Listing, getFigureById, getFigureImage } from '@/types/hawkins';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -40,8 +40,43 @@ export default function ItemDetailsModal({
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
 
+  const figure = getFigureById(listing.figureId);
+  const figureImage = getFigureImage(listing.figureId);
+  const targetFigure = listing.swapTargetId ? getFigureById(listing.swapTargetId) : null;
+
+  const isIso = listing.listingType === 'iso';
+  const isSwap = listing.listingType === 'swap';
+
+  const getTypeColor = () => {
+    switch (listing.listingType) {
+      case 'sell': return theme.colors.primary;
+      case 'swap': return theme.colors.swap;
+      case 'iso': return theme.colors.iso;
+      default: return theme.colors.primary;
+    }
+  };
+
+  const getTypeBadge = () => {
+    switch (listing.listingType) {
+      case 'sell': return '💰 FOR SALE';
+      case 'swap': return '⇄ SWAP';
+      case 'iso': return '🔍 ISO';
+      default: return '';
+    }
+  };
+
+  const getShareMessage = () => {
+    if (isIso) {
+      return `🔍 ISO: ${figure?.character || listing.figureId}\n\nMax Budget: $${listing.price.toFixed(2)}\n📍 ${listing.location}\n📦 Looking for: ${listing.condition}\n\nContact: ${listing.sellerHandle}\n\n#HawkinsTrade #StrangerThings #ISO`;
+    }
+    if (isSwap) {
+      return `⇄ Trade Offer!\n\n${listing.title}\nWants: ${targetFigure?.character || 'Any'}\n📍 ${listing.location}\n📦 Condition: ${listing.condition}\n\nContact: ${listing.sellerHandle}\n\n#HawkinsTrade #StrangerThings #Trade`;
+    }
+    return `🔥 Check out this Stranger Things collectible!\n\n${listing.title}\n💰 $${listing.price.toFixed(2)}\n📍 ${listing.location}\n📦 Condition: ${listing.condition}\n\nContact: ${listing.sellerHandle}\n\n#HawkinsTrade #StrangerThings #Collectibles`;
+  };
+
   const handleShare = async () => {
-    const message = `🔥 Check out this Stranger Things collectible!\n\n${listing.title}\n💰 $${listing.price.toFixed(2)}\n📍 ${listing.location}\n📦 Condition: ${listing.condition}\n\nContact: ${listing.sellerHandle}\n\n#HawkinsTrade #StrangerThings #Collectibles`;
+    const message = getShareMessage();
 
     try {
       await Share.share({
@@ -133,12 +168,21 @@ export default function ItemDetailsModal({
         showsVerticalScrollIndicator={false}
       >
         {/* Hero Image */}
-        <View style={styles.imageContainer}>
+        <View style={[
+          styles.imageContainer,
+          isIso && { borderWidth: 3, borderColor: theme.colors.iso, borderStyle: 'dashed' }
+        ]}>
           <Image
-            source={{ uri: listing.imageUri }}
+            source={figureImage}
             style={styles.image}
             resizeMode="cover"
           />
+
+          {/* Type Badge */}
+          <View style={[styles.typeBadge, { backgroundColor: getTypeColor() }]}>
+            <Text style={styles.typeBadgeText}>{getTypeBadge()}</Text>
+          </View>
+
           {listing.isSold && (
             <View style={styles.soldOverlay}>
               <View style={[styles.soldStamp, { borderColor: theme.colors.sold }]}>
@@ -150,13 +194,51 @@ export default function ItemDetailsModal({
 
         {/* Content */}
         <View style={styles.content}>
-          {/* Title & Price */}
+          {/* Title */}
           <Text style={[styles.title, { color: theme.colors.text }]}>
-            {listing.title}
+            {isIso ? `ISO: ${figure?.character || listing.figureId}` : listing.title}
           </Text>
-          <Text style={[styles.price, { color: theme.colors.primary }]}>
-            ${listing.price.toFixed(2)}
-          </Text>
+
+          {/* Price/Swap Info */}
+          {isSwap ? (
+            <View style={styles.swapInfoLarge}>
+              <Text style={[styles.swapIcon, { color: theme.colors.swap }]}>⇄</Text>
+              <View>
+                <Text style={[styles.swapLabel, { color: theme.colors.textSecondary }]}>
+                  Wants to trade for:
+                </Text>
+                <Text style={[styles.swapTarget, { color: theme.colors.swap }]}>
+                  {targetFigure?.character || 'Any figure'}
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <Text style={[styles.price, { color: getTypeColor() }]}>
+              {isIso ? `Max: $${listing.price.toFixed(2)}` : `$${listing.price.toFixed(2)}`}
+            </Text>
+          )}
+
+          {/* Swap Target Figure Preview */}
+          {isSwap && targetFigure && (
+            <View style={[styles.swapTargetCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.swap }]}>
+              <Image
+                source={getFigureImage(listing.swapTargetId!)}
+                style={styles.swapTargetImage}
+                resizeMode="cover"
+              />
+              <View style={styles.swapTargetInfo}>
+                <Text style={[styles.swapTargetId, { color: theme.colors.textSecondary }]}>
+                  {targetFigure.id}
+                </Text>
+                <Text style={[styles.swapTargetName, { color: theme.colors.text }]}>
+                  {targetFigure.name}
+                </Text>
+                <Text style={[styles.swapTargetCharacter, { color: theme.colors.swap }]}>
+                  {targetFigure.character}
+                </Text>
+              </View>
+            </View>
+          )}
 
           {/* Seller */}
           <TouchableOpacity
@@ -164,7 +246,7 @@ export default function ItemDetailsModal({
             onPress={() => onSellerPress(listing.sellerHandle)}
           >
             <Text style={[styles.sellerLabel, { color: theme.colors.textSecondary }]}>
-              Seller:
+              {isIso ? 'Buyer:' : 'Seller:'}
             </Text>
             <Text style={[styles.sellerHandle, { color: theme.colors.secondary }]}>
               {listing.sellerHandle}
@@ -255,7 +337,7 @@ export default function ItemDetailsModal({
                     onPress={() => onRelatedItemPress(item)}
                   >
                     <Image
-                      source={{ uri: item.imageUri }}
+                      source={getFigureImage(item.figureId)}
                       style={styles.relatedImage}
                       resizeMode="cover"
                     />
@@ -270,7 +352,7 @@ export default function ItemDetailsModal({
                         style={[styles.relatedTitle, { color: theme.colors.text }]}
                         numberOfLines={1}
                       >
-                        {item.title.split(' ')[1]}
+                        {getFigureById(item.figureId)?.character || item.title.split(' ')[1]}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -320,6 +402,21 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#1a1a1a',
   },
+  typeBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  typeBadgeText: {
+    color: '#fff',
+    fontFamily: 'monospace',
+    fontSize: 11,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
   soldOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -354,6 +451,59 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 12,
+  },
+  swapInfoLarge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  swapIcon: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  swapLabel: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+  },
+  swapTarget: {
+    fontFamily: 'monospace',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  swapTargetCard: {
+    flexDirection: 'row',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 2,
+    marginBottom: 16,
+    gap: 12,
+  },
+  swapTargetImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    backgroundColor: '#1a1a1a',
+  },
+  swapTargetInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  swapTargetId: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    marginBottom: 2,
+  },
+  swapTargetName: {
+    fontFamily: 'serif',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  swapTargetCharacter: {
+    fontFamily: 'monospace',
+    fontSize: 13,
+    fontWeight: '600',
   },
   sellerRow: {
     flexDirection: 'row',

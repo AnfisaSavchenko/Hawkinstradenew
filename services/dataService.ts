@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Listing, UserData, OFFICIAL_FIGURES } from '@/types/hawkins';
+import { Listing, UserData, OFFICIAL_FIGURES, ListingType } from '@/types/hawkins';
 
 const STORAGE_KEYS = {
-  LISTINGS: 'hawkins_trade_listings',
-  USER_DATA: 'hawkins_trade_user',
-  INITIALIZED: 'hawkins_trade_initialized',
+  LISTINGS: 'hawkins_trade_listings_v2',
+  USER_DATA: 'hawkins_trade_user_v2',
+  INITIALIZED: 'hawkins_trade_initialized_v2',
 };
 
 // Generate a unique ID
@@ -12,8 +12,9 @@ export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-// Mock Community Listings for initial seed
+// Mock Community Listings for initial seed - includes Sell, Swap, and ISO types
 const MOCK_LISTINGS: Listing[] = [
+  // SELL listings
   {
     id: 'mock_1',
     figureId: 'VC259',
@@ -22,7 +23,7 @@ const MOCK_LISTINGS: Listing[] = [
     condition: 'Mint in Box',
     location: 'Hawkins, IN',
     description: 'Rare VC259 Will figure, still in original packaging. Slight wear on the corners of the box. From a smoke-free home in Hawkins.',
-    imageUri: 'https://picsum.photos/seed/will259/400/500',
+    imageUri: '',
     sellerId: 'seller_1',
     sellerHandle: '@MikeWheeler_84',
     contactMethods: [
@@ -31,16 +32,17 @@ const MOCK_LISTINGS: Listing[] = [
     ],
     isSold: false,
     createdAt: Date.now() - 86400000 * 2,
+    listingType: 'sell',
   },
   {
     id: 'mock_2',
     figureId: 'VC271',
-    title: 'VC271 Demogorgon',
+    title: 'VC271 Demogorgon - The Monster',
     price: 330,
     condition: 'Loose, Complete',
     location: 'Indianapolis, IN',
     description: 'The legendary Demogorgon figure. All parts included. Perfect for collectors who want to display without box.',
-    imageUri: 'https://picsum.photos/seed/demo271/400/500',
+    imageUri: '',
     sellerId: 'seller_2',
     sellerHandle: '@DustinHenderson',
     contactMethods: [
@@ -49,16 +51,17 @@ const MOCK_LISTINGS: Listing[] = [
     ],
     isSold: true,
     createdAt: Date.now() - 86400000 * 5,
+    listingType: 'sell',
   },
   {
     id: 'mock_3',
-    figureId: 'VC263',
-    title: 'VC263 Eleven - The Psychic',
+    figureId: 'VC269',
+    title: 'VC269 Eleven - The Psychic',
     price: 250,
     condition: 'Near Mint',
     location: 'Chicago, IL',
-    description: 'Eleven figure with Eggo waffle accessory. Minor shelf wear only. A must-have for any serious collector.',
-    imageUri: 'https://picsum.photos/seed/eleven263/400/500',
+    description: 'Eleven figure in near mint condition. Minor shelf wear only. A must-have for any serious collector.',
+    imageUri: '',
     sellerId: 'seller_3',
     sellerHandle: '@HopperChief',
     contactMethods: [
@@ -66,16 +69,17 @@ const MOCK_LISTINGS: Listing[] = [
     ],
     isSold: false,
     createdAt: Date.now() - 86400000 * 1,
+    listingType: 'sell',
   },
   {
     id: 'mock_4',
-    figureId: 'VC265',
-    title: 'VC265 Jim Hopper - The Chief',
+    figureId: 'VC263',
+    title: 'VC263 Jim Hopper - The Chief',
     price: 180,
     condition: 'Excellent',
     location: 'Hawkins, IN',
-    description: 'Chief Hopper figure with hat accessory. Great condition, adult owned.',
-    imageUri: 'https://picsum.photos/seed/hopper265/400/500',
+    description: 'Chief Hopper figure. Great condition, adult owned.',
+    imageUri: '',
     sellerId: 'seller_1',
     sellerHandle: '@MikeWheeler_84',
     contactMethods: [
@@ -83,16 +87,18 @@ const MOCK_LISTINGS: Listing[] = [
     ],
     isSold: false,
     createdAt: Date.now() - 86400000 * 3,
+    listingType: 'sell',
   },
+  // SWAP listings
   {
     id: 'mock_5',
-    figureId: 'VC274',
-    title: 'VC274 Vecna - The Curse',
-    price: 450,
+    figureId: 'VC267',
+    title: 'VC267 Steve Harrington - The Protector',
+    price: 0,
     condition: 'Mint in Box',
     location: 'Los Angeles, CA',
-    description: 'Ultra rare Vecna figure. Factory sealed. Never opened. The crown jewel of any ST collection.',
-    imageUri: 'https://picsum.photos/seed/vecna274/400/500',
+    description: 'Have Steve in Mint condition. Looking to swap for Eleven or Vecna figure. Can add cash for the right deal.',
+    imageUri: '',
     sellerId: 'seller_4',
     sellerHandle: '@MaxMayfield',
     contactMethods: [
@@ -101,16 +107,18 @@ const MOCK_LISTINGS: Listing[] = [
     ],
     isSold: false,
     createdAt: Date.now() - 86400000 * 0.5,
+    listingType: 'swap',
+    swapTargetId: 'VC269',
   },
   {
     id: 'mock_6',
     figureId: 'VC268',
-    title: 'VC268 Steve Harrington',
-    price: 200,
+    title: 'VC268 Steve Harrington - Upside Down',
+    price: 0,
     condition: 'Good',
     location: 'Denver, CO',
-    description: 'Steve "The Hair" Harrington figure. Some box damage but figure is perfect.',
-    imageUri: 'https://picsum.photos/seed/steve268/400/500',
+    description: 'Upside Down Steve looking to swap for any Demogorgon variant. DM me!',
+    imageUri: '',
     sellerId: 'seller_2',
     sellerHandle: '@DustinHenderson',
     contactMethods: [
@@ -118,16 +126,18 @@ const MOCK_LISTINGS: Listing[] = [
     ],
     isSold: false,
     createdAt: Date.now() - 86400000 * 4,
+    listingType: 'swap',
+    swapTargetId: 'VC271',
   },
   {
     id: 'mock_7',
-    figureId: 'VC275',
-    title: 'VC275 Eddie Munson - The Hero',
-    price: 380,
-    condition: 'Mint in Box',
+    figureId: 'VC261',
+    title: 'VC261 Dustin Henderson - The Brain',
+    price: 0,
+    condition: 'Near Mint',
     location: 'Austin, TX',
-    description: 'Eddie Munson with guitar accessory. Hellfire Club forever!',
-    imageUri: 'https://picsum.photos/seed/eddie275/400/500',
+    description: 'Trading my Dustin for Eddie. Fair swap only!',
+    imageUri: '',
     sellerId: 'seller_5',
     sellerHandle: '@NancyDrew_67',
     contactMethods: [
@@ -136,23 +146,101 @@ const MOCK_LISTINGS: Listing[] = [
     ],
     isSold: false,
     createdAt: Date.now() - 86400000 * 2.5,
+    listingType: 'swap',
+    swapTargetId: 'VC288',
   },
+  // ISO (In Search Of) listings
   {
     id: 'mock_8',
-    figureId: 'VC260',
-    title: 'VC260 Mike Wheeler',
-    price: 95,
-    condition: 'Loose, Complete',
+    figureId: 'VC277',
+    title: 'Looking for VC277 Vecna - Phone Stand Edition',
+    price: 500,
+    condition: 'Mint in Box',
     location: 'Hawkins, IN',
-    description: 'Mike Wheeler figure. All accessories included. Walkie-talkie and D&D dice.',
-    imageUri: 'https://picsum.photos/seed/mike260/400/500',
+    description: 'Desperately seeking Vecna Phone Stand Edition! Will pay top dollar for mint condition. This is my grail piece!',
+    imageUri: '',
     sellerId: 'seller_1',
     sellerHandle: '@MikeWheeler_84',
     contactMethods: [
       { type: 'instagram', username: '@MikeWheeler_84' },
     ],
-    isSold: true,
-    createdAt: Date.now() - 86400000 * 7,
+    isSold: false,
+    createdAt: Date.now() - 86400000 * 0.25,
+    listingType: 'iso',
+  },
+  {
+    id: 'mock_9',
+    figureId: 'VC288',
+    title: 'ISO: VC288 Eddie Munson - Cable Deco',
+    price: 350,
+    condition: 'Near Mint',
+    location: 'Seattle, WA',
+    description: 'Looking for Eddie Cable Deco edition. Willing to pay up to $350 for near mint or better.',
+    imageUri: '',
+    sellerId: 'seller_6',
+    sellerHandle: '@JoyceByers_Mom',
+    contactMethods: [
+      { type: 'email', username: 'joyce.byers@hawkins.gov' },
+    ],
+    isSold: false,
+    createdAt: Date.now() - 86400000 * 1.5,
+    listingType: 'iso',
+  },
+  {
+    id: 'mock_10',
+    figureId: 'VC356',
+    title: 'WANTED: VC356 Eleven Paperclip Edition',
+    price: 200,
+    condition: 'Good',
+    location: 'Miami, FL',
+    description: 'Searching for the Eleven Paperclip variant. Any condition considered! Message me what you have.',
+    imageUri: '',
+    sellerId: 'seller_3',
+    sellerHandle: '@HopperChief',
+    contactMethods: [
+      { type: 'instagram', username: '@HopperChief' },
+      { type: 'tiktok', username: '@hop_til_you_drop' },
+    ],
+    isSold: false,
+    createdAt: Date.now() - 86400000 * 3.5,
+    listingType: 'iso',
+  },
+  // More SELL listings
+  {
+    id: 'mock_11',
+    figureId: 'VC274',
+    title: 'VC274 Mike Wheeler - The Searcher',
+    price: 95,
+    condition: 'Excellent',
+    location: 'New York, NY',
+    description: 'Mike Wheeler figure in excellent condition. Box has minor wear but figure is perfect.',
+    imageUri: '',
+    sellerId: 'seller_7',
+    sellerHandle: '@LucasSinclair',
+    contactMethods: [
+      { type: 'instagram', username: '@LucasSinclair' },
+    ],
+    isSold: false,
+    createdAt: Date.now() - 86400000 * 6,
+    listingType: 'sell',
+  },
+  {
+    id: 'mock_12',
+    figureId: 'VC265',
+    title: 'VC265 Max Mayfield - The Runaway',
+    price: 145,
+    condition: 'Near Mint',
+    location: 'San Francisco, CA',
+    description: 'Max figure. Kate Bush not included but highly recommended as soundtrack.',
+    imageUri: '',
+    sellerId: 'seller_4',
+    sellerHandle: '@MaxMayfield',
+    contactMethods: [
+      { type: 'instagram', username: '@MaxMayfield' },
+    ],
+    isSold: false,
+    createdAt: Date.now() - 86400000 * 4.5,
+    listingType: 'sell',
   },
 ];
 
@@ -368,6 +456,18 @@ export async function getUniqueCharacters(): Promise<string[]> {
     return [...new Set(characters)];
   } catch (error) {
     console.error('Failed to get unique characters:', error);
+    return [];
+  }
+}
+
+// Get unique listing types
+export async function getUniqueListingTypes(): Promise<ListingType[]> {
+  try {
+    const listings = await getListings();
+    const types = [...new Set(listings.map((l) => l.listingType))];
+    return types;
+  } catch (error) {
+    console.error('Failed to get unique listing types:', error);
     return [];
   }
 }

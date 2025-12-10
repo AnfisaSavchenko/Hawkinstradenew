@@ -6,18 +6,23 @@ import {
   RefreshControl,
   Text,
   ActivityIndicator,
+  TouchableOpacity,
+  Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import HawkinsHeader from '@/components/HawkinsHeader';
 import ListingCard from '@/components/ListingCard';
 import FilterChips, { FilterType } from '@/components/FilterChips';
-import { Listing, OFFICIAL_FIGURES } from '@/types/hawkins';
+import TradeModal from '@/components/TradeModal';
+import { Listing, OFFICIAL_FIGURES, ListingType } from '@/types/hawkins';
 import {
   getListings,
   getUniqueCharacters,
   getUniqueLocations,
   getUniqueSellers,
+  addListing,
 } from '@/services/dataService';
 
 interface FilterOption {
@@ -29,12 +34,14 @@ interface FilterOption {
 export default function MarketScreen() {
   const { theme } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [listings, setListings] = useState<Listing[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterOption | null>(null);
+  const [isTradeModalVisible, setIsTradeModalVisible] = useState(false);
 
   // Filter options
   const [characters, setCharacters] = useState<string[]>([]);
@@ -75,6 +82,8 @@ export default function MarketScreen() {
 
     const filtered = listings.filter((listing) => {
       switch (activeFilter.type) {
+        case 'type':
+          return listing.listingType === (activeFilter.value as ListingType);
         case 'character':
           const figure = OFFICIAL_FIGURES.find((f) => f.id === listing.figureId);
           return figure?.character === activeFilter.value;
@@ -116,6 +125,15 @@ export default function MarketScreen() {
   const handleFilterChange = useCallback((filter: FilterOption | null) => {
     setActiveFilter(filter);
   }, []);
+
+  const handleTradeSubmit = useCallback(
+    async (listing: Omit<Listing, 'id' | 'createdAt'>) => {
+      await addListing(listing);
+      setIsTradeModalVisible(false);
+      loadData();
+    },
+    [loadData]
+  );
 
   if (isLoading) {
     return (
@@ -174,6 +192,28 @@ export default function MarketScreen() {
           </View>
         }
       />
+
+      {/* FAB - Floating Action Button */}
+      <TouchableOpacity
+        style={[
+          styles.fab,
+          {
+            backgroundColor: theme.colors.secondary,
+            bottom: 20 + insets.bottom,
+          },
+        ]}
+        onPress={() => setIsTradeModalVisible(true)}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.fabIcon}>+</Text>
+      </TouchableOpacity>
+
+      {/* Trade Modal */}
+      <TradeModal
+        visible={isTradeModalVisible}
+        onClose={() => setIsTradeModalVisible(false)}
+        onSubmit={handleTradeSubmit}
+      />
     </View>
   );
 }
@@ -193,7 +233,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: 100,
   },
   emptyContainer: {
     flex: 1,
@@ -209,5 +249,31 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 14,
     textAlign: 'center',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  fabIcon: {
+    color: '#fff',
+    fontSize: 32,
+    fontWeight: '300',
+    marginTop: -2,
   },
 });
