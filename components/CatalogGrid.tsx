@@ -4,26 +4,18 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Figure } from '@/types/hawkins';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const COLUMN_GAP = 8;
+const COLUMN_GAP = 10;
 const HORIZONTAL_PADDING = 16;
 const NUM_COLUMNS = 3;
 const ITEM_WIDTH = (SCREEN_WIDTH - HORIZONTAL_PADDING * 2 - COLUMN_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
 
 interface CatalogItemProps {
   figure: Figure;
-  isSelling: boolean;
-  isOwned: boolean;
   onPress: () => void;
 }
 
-function CatalogItem({ figure, isSelling, isOwned, onPress }: CatalogItemProps) {
+function CatalogItem({ figure, onPress }: CatalogItemProps) {
   const { theme } = useTheme();
-
-  const getDimmedOpacity = () => {
-    if (isSelling) return 1;
-    if (isOwned) return 0.8;
-    return 0.4;
-  };
 
   return (
     <TouchableOpacity
@@ -31,9 +23,7 @@ function CatalogItem({ figure, isSelling, isOwned, onPress }: CatalogItemProps) 
         styles.item,
         {
           backgroundColor: theme.colors.cardBg,
-          borderColor: isSelling ? theme.colors.primary : theme.colors.border,
-          borderWidth: isSelling ? 2 : 1,
-          opacity: getDimmedOpacity(),
+          borderColor: theme.colors.primary,
         },
       ]}
       onPress={onPress}
@@ -46,17 +36,12 @@ function CatalogItem({ figure, isSelling, isOwned, onPress }: CatalogItemProps) 
           style={styles.image}
           resizeMode="cover"
         />
-        {isSelling && (
-          <View style={[styles.sellingBadge, { backgroundColor: theme.colors.primary }]}>
-            <Text style={styles.sellingText}>Selling</Text>
-          </View>
-        )}
       </View>
 
-      {/* Figure Info */}
-      <View style={styles.info}>
+      {/* Figure Info - File Label Style */}
+      <View style={[styles.info, { borderTopColor: theme.colors.primary }]}>
         <Text
-          style={[styles.figureId, { color: theme.colors.textSecondary }]}
+          style={[styles.figureId, { color: theme.colors.primary }]}
           numberOfLines={1}
         >
           {figure.id}
@@ -74,15 +59,11 @@ function CatalogItem({ figure, isSelling, isOwned, onPress }: CatalogItemProps) 
 
 interface CatalogGridProps {
   figures: Figure[];
-  sellingFigureIds: string[];
-  ownedFigureIds: string[];
   onItemPress: (figure: Figure) => void;
 }
 
 export default function CatalogGrid({
   figures,
-  sellingFigureIds,
-  ownedFigureIds,
   onItemPress,
 }: CatalogGridProps) {
   return (
@@ -91,8 +72,6 @@ export default function CatalogGrid({
         <CatalogItem
           key={figure.id}
           figure={figure}
-          isSelling={sellingFigureIds.includes(figure.id)}
-          isOwned={ownedFigureIds.includes(figure.id)}
           onPress={() => onItemPress(figure)}
         />
       ))}
@@ -110,43 +89,34 @@ const styles = StyleSheet.create({
   item: {
     width: ITEM_WIDTH,
     borderRadius: 8,
+    borderWidth: 2,
     overflow: 'hidden',
     marginBottom: COLUMN_GAP,
   },
   imageContainer: {
     height: ITEM_WIDTH * 1.2,
     position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   image: {
     width: '100%',
     height: '100%',
   },
-  sellingBadge: {
-    position: 'absolute',
-    top: 4,
-    left: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  sellingText: {
-    color: '#fff',
-    fontSize: 8,
-    fontWeight: 'bold',
-    fontFamily: 'monospace',
-    textTransform: 'uppercase',
-  },
   info: {
     padding: 8,
+    borderTopWidth: 1,
   },
   figureId: {
     fontFamily: 'monospace',
-    fontSize: 10,
+    fontSize: 11,
+    fontWeight: 'bold',
     marginBottom: 2,
+    letterSpacing: 1,
   },
   characterName: {
-    fontFamily: 'serif',
-    fontSize: 11,
+    fontFamily: 'monospace',
+    fontSize: 10,
     fontWeight: '600',
   },
 });

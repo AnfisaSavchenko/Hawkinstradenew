@@ -1,91 +1,30 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   Text,
-  RefreshControl,
-  Alert,
-  TouchableOpacity,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import HawkinsHeader from '@/components/HawkinsHeader';
 import CatalogGrid from '@/components/CatalogGrid';
+import FigurePreviewModal from '@/components/FigurePreviewModal';
 import { Figure, OFFICIAL_FIGURES } from '@/types/hawkins';
-import { getUserSellingFigures, clearAllData } from '@/services/dataService';
 
 export default function CatalogScreen() {
   const { theme } = useTheme();
-  const [sellingFigures, setSellingFigures] = useState<string[]>([]);
-  const [ownedFigures, setOwnedFigures] = useState<string[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [cleanSlateCount, setCleanSlateCount] = useState(0);
-
-  const loadData = useCallback(async () => {
-    try {
-      const selling = await getUserSellingFigures();
-      setSellingFigures(selling);
-      // For demo, mark owned figures as the ones user has ever listed
-      setOwnedFigures(selling);
-    } catch (error) {
-      console.error('Failed to load catalog data:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const handleRefresh = useCallback(() => {
-    setIsRefreshing(true);
-    loadData();
-  }, [loadData]);
+  const [selectedFigure, setSelectedFigure] = useState<Figure | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const handleFigurePress = useCallback((figure: Figure) => {
-    Alert.alert(
-      figure.name,
-      `Figure ID: ${figure.id}\nCharacter: ${figure.character}\n\n${
-        sellingFigures.includes(figure.id)
-          ? '✅ You are currently selling this figure'
-          : ownedFigures.includes(figure.id)
-          ? '📦 In your collection'
-          : '❓ Not in your collection'
-      }`,
-      [{ text: 'OK' }]
-    );
-  }, [sellingFigures, ownedFigures]);
+    setSelectedFigure(figure);
+    setIsModalVisible(true);
+  }, []);
 
-  // Hidden Clean Slate trigger (tap title 5 times)
-  const handleCleanSlate = useCallback(async () => {
-    const newCount = cleanSlateCount + 1;
-    setCleanSlateCount(newCount);
-
-    if (newCount >= 5) {
-      setCleanSlateCount(0);
-      Alert.alert(
-        '🌀 Clean Slate',
-        'Are you sure you want to reset all data? This will wipe all listings and restore the initial mock data.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Reset Everything',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                await clearAllData();
-                loadData();
-                Alert.alert('Done!', 'The slate has been cleaned. Pull down to refresh.');
-              } catch {
-                Alert.alert('Error', 'Failed to clear data.');
-              }
-            },
-          },
-        ]
-      );
-    }
-  }, [cleanSlateCount, loadData]);
+  const handleCloseModal = useCallback(() => {
+    setIsModalVisible(false);
+    setSelectedFigure(null);
+  }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -95,79 +34,37 @@ export default function CatalogScreen() {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={theme.colors.primary}
-            colors={[theme.colors.primary]}
-          />
-        }
       >
         {/* Archive Title */}
-        <TouchableOpacity onPress={handleCleanSlate} activeOpacity={1}>
-          <View style={styles.titleContainer}>
-            <Text style={[styles.title, { color: theme.colors.primary }]}>
-              THE ARCHIVE
-            </Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-              24 Official Figures • VC259-VC282
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Stats Row */}
-        <View style={styles.statsRow}>
-          <View style={[styles.statBox, { borderColor: theme.colors.border }]}>
-            <Text style={[styles.statNumber, { color: theme.colors.secondary }]}>
-              {sellingFigures.length}
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
-              Selling
-            </Text>
-          </View>
-          <View style={[styles.statBox, { borderColor: theme.colors.border }]}>
-            <Text style={[styles.statNumber, { color: theme.colors.text }]}>
-              {ownedFigures.length}
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
-              Owned
-            </Text>
-          </View>
-          <View style={[styles.statBox, { borderColor: theme.colors.border }]}>
-            <Text style={[styles.statNumber, { color: theme.colors.primary }]}>
-              {24 - ownedFigures.length}
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
-              Missing
-            </Text>
-          </View>
+        <View style={styles.titleContainer}>
+          <Text style={[styles.title, { color: theme.colors.primary }]}>
+            THE ARCHIVE
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+            {OFFICIAL_FIGURES.length} Official Figures • VC259-VC356
+          </Text>
         </View>
 
-        {/* Legend */}
-        <View style={styles.legend}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: theme.colors.primary }]} />
-            <Text style={[styles.legendText, { color: theme.colors.textSecondary }]}>
-              Currently Selling
-            </Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: theme.colors.textSecondary, opacity: 0.4 }]} />
-            <Text style={[styles.legendText, { color: theme.colors.textSecondary }]}>
-              Not Owned (Dimmed)
-            </Text>
-          </View>
+        {/* Decorative Divider */}
+        <View style={styles.dividerContainer}>
+          <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
+          <Text style={[styles.dividerText, { color: theme.colors.primary }]}>◆ ◆ ◆</Text>
+          <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
         </View>
 
         {/* Grid */}
         <CatalogGrid
           figures={OFFICIAL_FIGURES}
-          sellingFigureIds={sellingFigures}
-          ownedFigureIds={ownedFigures}
           onItemPress={handleFigurePress}
         />
       </ScrollView>
+
+      {/* Figure Preview Modal */}
+      <FigurePreviewModal
+        visible={isModalVisible}
+        figure={selectedFigure}
+        onClose={handleCloseModal}
+      />
     </View>
   );
 }
@@ -184,64 +81,36 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 24,
   },
   title: {
     fontFamily: 'serif',
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    letterSpacing: 4,
-    textShadowColor: 'rgba(255, 21, 21, 0.3)',
+    letterSpacing: 6,
+    textShadowColor: 'rgba(255, 21, 21, 0.4)',
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+    textShadowRadius: 10,
   },
   subtitle: {
     fontFamily: 'monospace',
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 8,
+    letterSpacing: 1,
   },
-  statsRow: {
+  dividerContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
+    alignItems: 'center',
+    paddingHorizontal: 40,
     marginBottom: 20,
-    gap: 12,
   },
-  statBox: {
+  dividerLine: {
     flex: 1,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
+    height: 1,
   },
-  statNumber: {
-    fontFamily: 'monospace',
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  statLabel: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    textTransform: 'uppercase',
-    marginTop: 4,
-  },
-  legend: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 24,
-    marginBottom: 16,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendText: {
-    fontFamily: 'monospace',
-    fontSize: 10,
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 8,
+    letterSpacing: 4,
   },
 });
