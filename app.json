@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow Hawkins Trade to access your camera to take photos of your figures for listings.",
+        "NSPhotoLibraryUsageDescription": "Allow Hawkins Trade to access your photos to select images of your figures for listings."
+      }
     },
     "android": {
       "adaptiveIcon": {
