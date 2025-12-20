@@ -230,7 +230,7 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
     </View>
   );
 
-  // Figure dropdown with image thumbnails
+  // Figure dropdown (text-only, no thumbnails)
   const renderFigureDropdown = (
     figures: typeof OFFICIAL_FIGURES,
     selectedValue: string,
@@ -244,7 +244,7 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
           <TouchableOpacity
             key={figure.id}
             style={[
-              styles.dropdownItemWithImage,
+              styles.dropdownItem,
               selectedValue === figure.id && { backgroundColor: theme.colors.primary + '30' },
             ]}
             onPress={() => {
@@ -252,11 +252,9 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
               onCloseDropdown();
             }}
           >
-            <Image source={figure.image} style={styles.dropdownThumb} resizeMode="cover" />
-            <View style={styles.dropdownItemInfo}>
-              <Text style={[styles.dropdownItemId, { color: theme.colors.textSecondary }]}>{figure.id}</Text>
-              <Text style={[styles.dropdownItemText, { color: theme.colors.text }]}>{figure.character}</Text>
-            </View>
+            <Text style={[styles.dropdownItemText, { color: theme.colors.text }]}>
+              {figure.character} - {figure.id}
+            </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -337,20 +335,16 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
               {listingType === 'iso' ? 'Looking For' : 'Figure'}
             </Text>
             <TouchableOpacity
-              style={[styles.figureSelector, { borderBottomColor: getTypeColor(listingType) }]}
+              style={[styles.figureSelectorTextOnly, { borderBottomColor: getTypeColor(listingType) }]}
               onPress={() => {
                 setShowFigureDropdown(!showFigureDropdown);
                 setShowTargetDropdown(false);
                 setShowConditionDropdown(false);
               }}
             >
-              {selectedFigureData && (
-                <Image source={selectedFigureData.image} style={styles.selectedThumb} resizeMode="cover" />
-              )}
-              <View style={styles.selectedInfo}>
-                <Text style={[styles.selectedId, { color: theme.colors.textSecondary }]}>{selectedFigure}</Text>
-                <Text style={[styles.inputText, { color: theme.colors.text }]}>{selectedFigureData?.character}</Text>
-              </View>
+              <Text style={[styles.inputText, { color: theme.colors.text, flex: 1 }]}>
+                {selectedFigureData?.character} - {selectedFigure}
+              </Text>
               <Text style={[styles.chevron, { color: getTypeColor(listingType) }]}>▼</Text>
             </TouchableOpacity>
             {showFigureDropdown && renderFigureDropdown(
@@ -370,20 +364,16 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
               <View style={[styles.field, { zIndex: 90 }]}>
                 <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Swap For</Text>
                 <TouchableOpacity
-                  style={[styles.figureSelector, { borderBottomColor: theme.colors.swap }]}
+                  style={[styles.figureSelectorTextOnly, { borderBottomColor: theme.colors.swap }]}
                   onPress={() => {
                     setShowTargetDropdown(!showTargetDropdown);
                     setShowFigureDropdown(false);
                     setShowConditionDropdown(false);
                   }}
                 >
-                  {targetFigureData && (
-                    <Image source={targetFigureData.image} style={styles.selectedThumb} resizeMode="cover" />
-                  )}
-                  <View style={styles.selectedInfo}>
-                    <Text style={[styles.selectedId, { color: theme.colors.textSecondary }]}>{swapTargetId}</Text>
-                    <Text style={[styles.inputText, { color: theme.colors.text }]}>{targetFigureData?.character}</Text>
-                  </View>
+                  <Text style={[styles.inputText, { color: theme.colors.text, flex: 1 }]}>
+                    {targetFigureData?.character} - {swapTargetId}
+                  </Text>
                   <Text style={[styles.chevron, { color: theme.colors.swap }]}>▼</Text>
                 </TouchableOpacity>
                 {showTargetDropdown && renderFigureDropdown(
@@ -707,36 +697,14 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(255,255,255,0.1)',
-  },
-  dropdownItemWithImage: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-  },
-  dropdownThumb: {
-    width: 40,
-    height: 40,
-    borderRadius: 6,
-    backgroundColor: '#1a1a1a',
-  },
-  dropdownItemInfo: {
-    flex: 1,
-  },
-  dropdownItemId: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    marginBottom: 2,
   },
   dropdownItemText: {
     fontFamily: 'monospace',
     fontSize: 14,
+    letterSpacing: 0.5,
   },
   figureSelector: {
     flexDirection: 'row',
@@ -744,6 +712,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 2,
     gap: 12,
+  },
+  figureSelectorTextOnly: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 2,
   },
   selectedThumb: {
     width: 48,
