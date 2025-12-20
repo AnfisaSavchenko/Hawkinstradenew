@@ -149,15 +149,22 @@ export default function ListingCard({ listing, onPress, onSellerPress }: Listing
           </View>
         )}
 
-        {/* Seller */}
-        <TouchableOpacity onPress={onSellerPress}>
-          <Text style={[styles.seller, { color: theme.colors.textSecondary }]}>
-            {isIso ? 'Buyer: ' : 'Seller: '}
-            <Text style={[styles.sellerHandle, { color: theme.colors.secondary }]}>
-              {listing.sellerHandle}
+        {/* Seller with pen doodle annotation */}
+        <View style={styles.sellerRow}>
+          <TouchableOpacity onPress={onSellerPress} style={styles.sellerTouchable}>
+            <Text style={[styles.seller, { color: theme.colors.textSecondary }]}>
+              {isIso ? 'Buyer: ' : 'Seller: '}
+              <Text style={[styles.sellerHandle, { color: theme.colors.secondary }]}>
+                {listing.sellerHandle}
+              </Text>
             </Text>
-          </Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
+          <Image
+            source={require('@/assets/dossier/pen_star.png')}
+            style={styles.sellerDoodle}
+            resizeMode="contain"
+          />
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -306,11 +313,25 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
+  sellerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  sellerTouchable: {
+    flex: 1,
+  },
   seller: {
     fontFamily: 'monospace',
     fontSize: 12,
   },
   sellerHandle: {
     fontWeight: '600',
+  },
+  sellerDoodle: {
+    width: 18,
+    height: 18,
+    opacity: 0.6,
+    transform: [{ rotate: '-15deg' }],
   },
 });

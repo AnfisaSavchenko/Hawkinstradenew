@@ -288,7 +288,14 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Text style={[styles.closeText, { color: theme.colors.textSecondary }]}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>TRADE CENTER</Text>
+          <View style={styles.headerTitleContainer}>
+            <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>TRADE CENTER</Text>
+            <Image
+              source={require('@/assets/dossier/pen_underline.png')}
+              style={styles.headerUnderline}
+              resizeMode="contain"
+            />
+          </View>
           <View style={styles.closeButton} />
         </View>
 
@@ -465,6 +472,12 @@ export default function TradeModal({ visible, onClose, onSubmit }: TradeModalPro
                 <View style={styles.polaroidFrame}>
                   <Image source={{ uri: photoUri }} style={styles.polaroidImage} resizeMode="cover" />
                 </View>
+                {/* Paperclip overlay */}
+                <Image
+                  source={require('@/assets/dossier/paperclip.png')}
+                  style={styles.paperclipOverlay}
+                  resizeMode="contain"
+                />
                 <View style={styles.polaroidCaption}>
                   <Text style={[styles.polaroidText, { color: theme.colors.textSecondary }]}>
                     TAP TO CHANGE
@@ -597,6 +610,9 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 14,
   },
+  headerTitleContainer: {
+    alignItems: 'center',
+  },
   headerTitle: {
     fontFamily: 'serif',
     fontSize: 20,
@@ -605,6 +621,12 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(255, 21, 21, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
+  },
+  headerUnderline: {
+    width: 140,
+    height: 12,
+    opacity: 0.7,
+    marginTop: 2,
   },
   scroll: {
     flex: 1,
@@ -770,6 +792,15 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 10,
     letterSpacing: 2,
+  },
+  paperclipOverlay: {
+    position: 'absolute',
+    top: -10,
+    right: 10,
+    width: 60,
+    height: 60,
+    transform: [{ rotate: '25deg' }],
+    opacity: 0.9,
   },
   uploadButton: {
     borderWidth: 2,

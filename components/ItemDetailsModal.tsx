@@ -205,10 +205,17 @@ export default function ItemDetailsModal({
 
         {/* Content */}
         <View style={styles.content}>
-          {/* Title */}
-          <Text style={[styles.title, { color: theme.colors.text }]}>
-            {isIso ? `ISO: ${figure?.character || listing.figureId}` : listing.title}
-          </Text>
+          {/* Title with pen doodle underline */}
+          <View style={styles.titleContainer}>
+            <Text style={[styles.title, { color: theme.colors.text }]}>
+              {isIso ? `ISO: ${figure?.character || listing.figureId}` : listing.title}
+            </Text>
+            <Image
+              source={require('@/assets/dossier/pen_underline.png')}
+              style={styles.titleUnderline}
+              resizeMode="contain"
+            />
+          </View>
 
           {/* Price/Swap Info */}
           {isSwap ? (
@@ -295,7 +302,14 @@ export default function ItemDetailsModal({
             </View>
             <View style={styles.detailRow}>
               <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Figure ID</Text>
-              <Text style={[styles.detailValue, { color: theme.colors.text }]}>{listing.figureId}</Text>
+              <View style={styles.figureIdContainer}>
+                <Text style={[styles.detailValue, { color: theme.colors.text }]}>{listing.figureId}</Text>
+                <Image
+                  source={require('@/assets/dossier/pen_circle.png')}
+                  style={styles.figureIdDoodle}
+                  resizeMode="contain"
+                />
+              </View>
             </View>
           </View>
 
@@ -451,11 +465,20 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
+  titleContainer: {
+    marginBottom: 8,
+  },
   title: {
     fontFamily: 'serif',
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 8,
+  },
+  titleUnderline: {
+    width: 120,
+    height: 10,
+    opacity: 0.6,
+    marginTop: 2,
+    marginLeft: 4,
   },
   price: {
     fontFamily: 'monospace',
@@ -576,6 +599,19 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 14,
     fontWeight: '600',
+  },
+  figureIdContainer: {
+    position: 'relative',
+    alignItems: 'flex-end',
+  },
+  figureIdDoodle: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 40,
+    height: 40,
+    opacity: 0.6,
+    transform: [{ rotate: '12deg' }],
   },
   description: {
     fontFamily: 'serif',

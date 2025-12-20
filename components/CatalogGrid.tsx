@@ -9,6 +9,37 @@ const HORIZONTAL_PADDING = 16;
 const NUM_COLUMNS = 3;
 const ITEM_WIDTH = (SCREEN_WIDTH - HORIZONTAL_PADDING * 2 - COLUMN_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
 
+// Pen doodle decorations for analog dossier feel
+const PEN_DOODLES = [
+  { type: 'star', source: require('@/assets/dossier/pen_star.png') },
+  { type: 'circle', source: require('@/assets/dossier/pen_circle.png') },
+  { type: 'underline', source: require('@/assets/dossier/pen_underline.png') },
+];
+
+// Deterministic "random" doodle selection based on figure ID
+function getDoodleForFigure(figureId: string): { doodle: typeof PEN_DOODLES[number]; position: { top?: number; bottom?: number; left?: number; right?: number; rotation: number } } | null {
+  // Simple hash function to get a number from the figure ID
+  const hash = figureId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
+  // Only about 20% of items get a doodle
+  if (hash % 5 !== 0) return null;
+
+  const doodleIndex = hash % PEN_DOODLES.length;
+  const doodle = PEN_DOODLES[doodleIndex];
+
+  // Varied positions for a hand-annotated feel
+  const positions = [
+    { top: -5, right: -5, rotation: 15 },
+    { top: 5, left: -5, rotation: -20 },
+    { bottom: 25, right: 5, rotation: 10 },
+    { bottom: 30, left: 5, rotation: -15 },
+  ];
+
+  const positionIndex = Math.floor(hash / 10) % positions.length;
+
+  return { doodle, position: positions[positionIndex] };
+}
+
 interface CatalogItemProps {
   figure: Figure;
   onPress: () => void;
@@ -17,6 +48,7 @@ interface CatalogItemProps {
 function CatalogItem({ figure, onPress }: CatalogItemProps) {
   const { theme } = useTheme();
   const isUpsideDown = theme.mode === 'upsideDown';
+  const doodleData = getDoodleForFigure(figure.id);
 
   return (
     <TouchableOpacity
@@ -39,6 +71,26 @@ function CatalogItem({ figure, onPress }: CatalogItemProps) {
           resizeMode="cover"
         />
       </View>
+
+      {/* Hand-drawn pen doodle annotations */}
+      {doodleData && (
+        <Image
+          source={doodleData.doodle.source}
+          style={[
+            styles.doodleOverlay,
+            {
+              top: doodleData.position.top,
+              bottom: doodleData.position.bottom,
+              left: doodleData.position.left,
+              right: doodleData.position.right,
+              transform: [{ rotate: `${doodleData.position.rotation}deg` }],
+              width: doodleData.doodle.type === 'underline' ? 45 : 32,
+              height: doodleData.doodle.type === 'underline' ? 12 : 32,
+            },
+          ]}
+          resizeMode="contain"
+        />
+      )}
 
       {/* Figure Info - File Label Style */}
       <View
@@ -100,7 +152,7 @@ const styles = StyleSheet.create({
     width: ITEM_WIDTH,
     borderRadius: 8,
     borderWidth: 2,
-    overflow: 'hidden',
+    overflow: 'visible',
     marginBottom: COLUMN_GAP,
   },
   imageContainer: {
@@ -108,10 +160,18 @@ const styles = StyleSheet.create({
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
   },
   image: {
     width: '100%',
     height: '100%',
+  },
+  doodleOverlay: {
+    position: 'absolute',
+    opacity: 0.8,
+    zIndex: 10,
   },
   info: {
     padding: 8,
