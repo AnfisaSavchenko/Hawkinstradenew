@@ -12,8 +12,10 @@
       "supportsTablet": false,
       "infoPlist": {
         "NSCameraUsageDescription": "Allow Hawkins Trade to access your camera to take photos of your figures for listings.",
-        "NSPhotoLibraryUsageDescription": "Allow Hawkins Trade to access your photos to select images of your figures for listings."
-      }
+        "NSPhotoLibraryUsageDescription": "Allow Hawkins Trade to access your photos to select images of your figures for listings.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "hwktrade"
     },
     "android": {
       "adaptiveIcon": {
@@ -42,6 +44,13 @@
     "experiments": {
       "typedRoutes": true,
       "baseUrl": ""
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "55daed11-850a-4e51-b91d-601cd4a0233b"
+      }
+    },
+    "owner": "wonder_anf"
   }
 }
